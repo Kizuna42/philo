@@ -6,7 +6,7 @@
 #    By: kizuna <kizuna@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/12/19 00:00:00 by student           #+#    #+#              #
-#    Updated: 2025/05/24 17:18:07 by kizuna           ###   ########.fr        #
+#    Updated: 2025/05/24 17:27:55 by kizuna           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,10 @@ CC = cc
 CFLAGS = -Wall -Wextra -Werror -pthread
 RM = rm -f
 
-SRCDIR = .
+SRCDIR = src
+INCDIR = include
+OBJDIR = obj
+
 SOURCES = main.c \
           input.c \
           utils.c \
@@ -26,7 +29,8 @@ SOURCES = main.c \
           monitor.c \
           utils2.c
 
-OBJECTS = $(SOURCES:.c=.o)
+SRCS = $(addprefix $(SRCDIR)/, $(SOURCES))
+OBJECTS = $(addprefix $(OBJDIR)/, $(SOURCES:.c=.o))
 
 # Colors for output
 GREEN = \033[0;32m
@@ -36,18 +40,21 @@ NC = \033[0m # No Color
 
 all: $(NAME)
 
-$(NAME): $(OBJECTS)
+$(NAME): $(OBJDIR) $(OBJECTS)
 	@echo "$(YELLOW)Linking $(NAME)...$(NC)"
 	@$(CC) $(CFLAGS) $(OBJECTS) -o $(NAME)
 	@echo "$(GREEN)$(NAME) created successfully!$(NC)"
 
-%.o: %.c
+$(OBJDIR):
+	@mkdir -p $(OBJDIR)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@echo "$(YELLOW)Compiling $<...$(NC)"
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -I$(INCDIR) -c $< -o $@
 
 clean:
 	@echo "$(RED)Removing object files...$(NC)"
-	@$(RM) $(OBJECTS)
+	@$(RM) -r $(OBJDIR)
 
 fclean: clean
 	@echo "$(RED)Removing $(NAME)...$(NC)"
