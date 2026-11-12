@@ -48,7 +48,7 @@ $(NAME): $(OBJDIR) $(OBJECTS)
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(INCDIR)/philo.h
 	@echo "$(YELLOW)Compiling $<...$(NC)"
 	@$(CC) $(CFLAGS) -I$(INCDIR) -c $< -o $@
 

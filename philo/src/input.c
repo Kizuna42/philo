@@ -44,8 +44,30 @@ static int	check_digits(char *str)
 	return (0);
 }
 
+static int	exceeds_int_max(char *str)
+{
+	long	result;
+	int		i;
+
+	result = 0;
+	i = 0;
+	while (str[i])
+	{
+		result = result * 10 + (str[i] - '0');
+		if (result > INT_MAX)
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
 static int	check_values(char **argv, int i)
 {
+	if (exceeds_int_max(argv[i]))
+	{
+		printf("Error: Argument '%s' is too large\n", argv[i]);
+		return (1);
+	}
 	if (ft_atoi(argv[i]) <= 0)
 	{
 		printf("Error: Arguments must be positive integers\n");
