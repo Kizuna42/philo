@@ -1,0 +1,4 @@
+obj/
+*.o
+philo/philo
+philo_annotated/philo
