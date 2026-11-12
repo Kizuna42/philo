@@ -126,9 +126,15 @@ void	*philo_routine(void *pointer)
 
 	philo = (t_philo *)pointer;
 
-	/* 偶数番号の哲学者は少し待機（デッドロック回避） */
+	/*
+	 * 偶数番号の哲学者は time_to_eat / 2 だけ遅れて開始する。
+	 * 奇数番号が先にフォークを取り、食事の波が交互に揃うようにする。
+	 */
 	if (philo->id % 2 == 0)
-		ft_usleep(1);
+	{
+		print_message("is thinking", philo, philo->id);
+		ft_usleep(philo->time_to_eat / 2);
+	}
 
 	/* 死亡フラグがセットされるまで行動を繰り返す */
 	while (!check_if_dead(philo))
@@ -182,6 +188,8 @@ void	*monitor(void *pointer)
 		/* 死亡チェックまたは全員食事完了チェック */
 		if (check_death_and_set_flag(philos) || check_if_all_ate(philos))
 			break ;
+		/* CPU を占有して哲学者スレッドを遅らせないよう少し休む（10ms 以内の検出は維持） */
+		usleep(500);
 	}
 
 	return (pointer);

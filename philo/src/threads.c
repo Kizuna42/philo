@@ -45,7 +45,10 @@ void	*philo_routine(void *pointer)
 
 	philo = (t_philo *)pointer;
 	if (philo->id % 2 == 0)
-		ft_usleep(1);
+	{
+		print_message("is thinking", philo, philo->id);
+		ft_usleep(philo->time_to_eat / 2);
+	}
 	while (!check_if_dead(philo))
 	{
 		eat(philo);
@@ -64,6 +67,15 @@ void	*monitor(void *pointer)
 	{
 		if (check_death_and_set_flag(philos) || check_if_all_ate(philos))
 			break ;
+		usleep(500);
 	}
 	return (pointer);
+}
+
+void	think(t_philo *philo)
+{
+	print_message("is thinking", philo, philo->id);
+	if (philo->num_of_philos % 2 == 1
+		&& philo->time_to_eat * 2 > philo->time_to_sleep)
+		ft_usleep(philo->time_to_eat * 2 - philo->time_to_sleep);
 }

@@ -115,14 +115,22 @@ expect_error "zero meals" 5 800 200 200 0
 # Death scenarios
 expect_death "single philosopher dies" 800 810 1 800 200 200
 expect_death "4 310 200 100 dies" 310 320 4 310 200 100
+expect_death "2 philosophers 310 200 200 dies" 310 320 2 310 200 200
+expect_death "odd count 3 310 200 100 dies" 310 320 3 310 200 100
 
 # Simulations that must end without death
 expect_no_death_until_done "5 800 200 200 7" 5 7 5 800 200 200 7
 expect_no_death_until_done "4 410 200 200 10" 4 10 4 410 200 200 10
+expect_no_death_until_done "2 410 200 200 10" 2 10 2 410 200 200 10
+expect_no_death_until_done "200 800 200 200 5" 200 5 200 800 200 200 5
 
 # Simulations that must not die
 expect_alive_for "5 800 200 200 survives" 5 5 5 800 200 200
 expect_alive_for "4 410 200 200 survives" 5 4 4 410 200 200
+expect_alive_for "2 410 200 200 survives" 5 2 2 410 200 200
+expect_alive_for "odd count 3 800 200 200 survives" 5 3 3 800 200 200
+expect_alive_for "odd count 7 800 200 200 survives" 5 7 7 800 200 200
+expect_alive_for "200 800 200 200 survives" 5 200 200 800 200 200
 
 echo "----"
 echo "passed: $PASS, failed: $FAIL"
