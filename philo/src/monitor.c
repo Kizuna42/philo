@@ -34,10 +34,10 @@ int	check_death_and_set_flag(t_philo *philos)
 	{
 		if (philosopher_dead(&philos[i], philos[i].time_to_die))
 		{
-			print_message("died", &philos[i], philos[i].id);
 			pthread_mutex_lock(philos[0].dead_lock);
 			*philos->dead = 1;
 			pthread_mutex_unlock(philos[0].dead_lock);
+			print_message("died", &philos[i], philos[i].id);
 			return (1);
 		}
 		i++;
