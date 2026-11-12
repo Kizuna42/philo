@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build (make)
+        run: make -C philo
+
+      - name: Check no relink
+        run: |
+          if make -C philo | grep -q Linking; then
+            echo "Makefile relinks unnecessarily" >&2
+            exit 1
+          fi
+
+      - name: Smoke tests
+        run: tests/run_tests.sh philo/philo
+
+      - name: ThreadSanitizer (data races)
+        env:
+          TSAN_OPTIONS: detect_deadlocks=0 halt_on_error=1 exitcode=66
+        run: |
+          cc -Wall -Wextra -Werror -g -fsanitize=thread -pthread \
+            -Iphilo/include philo/src/*.c -o philo_tsan
+          ./philo_tsan 5 800 200 200 3 > /dev/null
+          ./philo_tsan 4 410 200 200 3 > /dev/null
+          ./philo_tsan 4 310 200 100 > /dev/null
+          ./philo_tsan 1 800 200 200 > /dev/null
+
+  norminette:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install norminette
+        run: pip install norminette
+      - name: Run norminette
+        run: norminette philo
