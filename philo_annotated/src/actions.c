@@ -36,36 +36,50 @@
 
 /*
  * ============================================================================
+ * lock_fork - フォークを 1 本取得して取得メッセージを出力する
+ * ============================================================================
+ */
+static void	lock_fork(pthread_mutex_t *fork, t_philo *philo)
+{
+	pthread_mutex_lock(fork);
+	print_message("has taken a fork", philo, philo->id);
+}
+
+/*
+ * ============================================================================
  * take_forks - フォークを取得する
  * ============================================================================
  *
  * 哲学者が食事をするために必要な2本のフォークを取得します。
- * 右のフォークを先に取り、次に左のフォークを取ります。
  *
- * 引数:
- *   philo: 行動する哲学者の構造体
+ * デッドロック回避（偶奇で取得順を変える）:
+ *   全員が同じ向き（右→左）で取ると、ロック順序がリング状に循環し、
+ *   全員が 1 本目を握った瞬間にデッドロックし得ます（ThreadSanitizer も
+ *   lock-order-inversion として報告します）。
+ *   そこで奇数番は右→左、偶数番は左→右の順で取ります。隣り合う哲学者の
+ *   取得順が逆になるため、ロック順序のグラフに循環ができません
+ *   （人数が奇数のときは 1 番と N 番が同じ向きになりますが、それでも
+ *   循環は生じません）。
  *
  * 特別なケース:
  *   哲学者が1人の場合、フォークが1本しかないため食事できません。
  *   この場合、死亡時間まで待機してからフォークを解放します。
- *
- * デッドロック回避:
- *   全ての哲学者が同じ順序（右→左）でフォークを取ることで、
- *   循環待機を防ぎます。
- *
- * 処理の流れ:
- *   1. 右のフォーク（mutex）をロック
- *   2. フォーク取得メッセージを出力
- *   3. 1人の場合は特別処理
- *   4. 左のフォーク（mutex）をロック
- *   5. 2本目のフォーク取得メッセージを出力
  * ============================================================================
  */
 void	take_forks(t_philo *philo)
 {
-	/* 右のフォークを取得 */
-	pthread_mutex_lock(philo->r_fork);
-	print_message("has taken a fork", philo, philo->id);
+	pthread_mutex_t	*first;
+	pthread_mutex_t	*second;
+
+	/* 奇数番は右→左、偶数番は左→右 */
+	first = philo->r_fork;
+	second = philo->l_fork;
+	if (philo->id % 2 == 0)
+	{
+		first = philo->l_fork;
+		second = philo->r_fork;
+	}
+	lock_fork(first, philo);
 
 	/* 1人の哲学者の特別処理 */
 	if (philo->num_of_philos == 1)
@@ -73,13 +87,10 @@ void	take_forks(t_philo *philo)
 		/* フォークが1本しかないので食事できない */
 		/* 死亡時間まで待機してから終了 */
 		ft_usleep(philo->time_to_die);
-		pthread_mutex_unlock(philo->r_fork);
+		pthread_mutex_unlock(first);
 		return ;
 	}
-
-	/* 左のフォークを取得 */
-	pthread_mutex_lock(philo->l_fork);
-	print_message("has taken a fork", philo, philo->id);
+	lock_fork(second, philo);
 }
 
 /*
@@ -207,4 +218,13 @@ void	philo_sleep(t_philo *philo)
 void	think(t_philo *philo)
 {
 	print_message("is thinking", philo, philo->id);
+
+	/*
+	 * 人数が奇数のときは、食事を 2 回分待たないと両隣のフォークが空かない。
+	 * 早く取りに行きすぎて隣人を餓死させないよう、
+	 * (time_to_eat * 2 - time_to_sleep) だけ考えてから次の食事に向かう。
+	 */
+	if (philo->num_of_philos % 2 == 1
+		&& philo->time_to_eat * 2 > philo->time_to_sleep)
+		ft_usleep(philo->time_to_eat * 2 - philo->time_to_sleep);
 }

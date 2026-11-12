@@ -27,16 +27,21 @@ jobs:
       - name: Smoke tests
         run: tests/run_tests.sh philo/philo
 
-      - name: ThreadSanitizer (data races)
+      - name: ThreadSanitizer (data races and lock-order inversion)
         env:
-          TSAN_OPTIONS: detect_deadlocks=0 halt_on_error=1 exitcode=66
+          TSAN_OPTIONS: detect_deadlocks=1 second_deadlock_stack=1 halt_on_error=1 exitcode=66
         run: |
           cc -Wall -Wextra -Werror -g -fsanitize=thread -pthread \
             -Iphilo/include philo/src/*.c -o philo_tsan
-          ./philo_tsan 5 800 200 200 3 > /dev/null
-          ./philo_tsan 4 410 200 200 3 > /dev/null
-          ./philo_tsan 4 310 200 100 > /dev/null
-          ./philo_tsan 1 800 200 200 > /dev/null
+          for run in 1 2 3; do
+            ./philo_tsan 1 800 200 200 > /dev/null
+            ./philo_tsan 2 410 200 200 5 > /dev/null
+            ./philo_tsan 3 800 200 200 5 > /dev/null
+            ./philo_tsan 4 410 200 200 5 > /dev/null
+            ./philo_tsan 4 310 200 100 > /dev/null
+            ./philo_tsan 5 800 200 200 7 > /dev/null
+            ./philo_tsan 200 800 200 200 2 > /dev/null
+          done
 
   norminette:
     runs-on: ubuntu-latest

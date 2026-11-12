@@ -12,19 +12,33 @@
 
 #include "philo.h"
 
+static void	lock_fork(pthread_mutex_t *fork, t_philo *philo)
+{
+	pthread_mutex_lock(fork);
+	print_message("has taken a fork", philo, philo->id);
+}
+
 void	take_forks(t_philo *philo)
 {
-	pthread_mutex_lock(philo->r_fork);
-	print_message("has taken a fork", philo, philo->id);
+	pthread_mutex_t	*first;
+	pthread_mutex_t	*second;
+
+	first = philo->r_fork;
+	second = philo->l_fork;
+	if (philo->id % 2 == 0)
+	{
+		first = philo->l_fork;
+		second = philo->r_fork;
+	}
+	lock_fork(first, philo);
 	if (philo->num_of_philos == 1)
 	{
 		while (!check_if_dead(philo))
 			usleep(100);
-		pthread_mutex_unlock(philo->r_fork);
+		pthread_mutex_unlock(first);
 		return ;
 	}
-	pthread_mutex_lock(philo->l_fork);
-	print_message("has taken a fork", philo, philo->id);
+	lock_fork(second, philo);
 }
 
 void	eat(t_philo *philo)
@@ -57,9 +71,4 @@ void	philo_sleep(t_philo *philo)
 {
 	print_message("is sleeping", philo, philo->id);
 	ft_usleep(philo->time_to_sleep);
-}
-
-void	think(t_philo *philo)
-{
-	print_message("is thinking", philo, philo->id);
 }
